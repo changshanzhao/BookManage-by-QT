@@ -88,9 +88,9 @@ class Ui_login(object):
 
         self.retranslateUi(login)
         self.tabWidget.setCurrentIndex(0)
-        self.pushButton_1.clicked.connect(login.register)
+        self.pushButton_1.clicked.connect(login.student_register)
         self.pushButton_2.clicked.connect(login.student_login)
-        self.pushButton_7.clicked.connect(login.register)
+        self.pushButton_7.clicked.connect(login.admin_register)
         self.pushButton_8.clicked.connect(login.admin_login)
         self.graphicsView.show()
         self.graphicsView_2.show()
