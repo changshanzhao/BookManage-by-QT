@@ -1,6 +1,8 @@
 import sys
 from PyQt5.QtGui import QPixmap, QPainter
 from PyQt5.QtCore import Qt
+
+import admin
 import login
 import register
 import student
@@ -126,6 +128,37 @@ class registerDialog(QDialog):
                 adm_register_Dlg.hide()
                 login.show()
 
+class adminDialog(QDialog):
+
+    def __init__(self, parent=None):
+        super(QDialog, self).__init__(parent)
+        self.ui = admin.Ui_admin()
+        self.ui.setupUi(self)
+    # 增加图书
+    def addbook(self):
+        titel = self.ui.lineEdit.text()
+        ISBN = self.ui.lineEdit_2.text()
+        au = self.ui.lineEdit_3.text()
+        time = self.ui.lineEdit_4.text()
+        num = self.ui.lineEdit_5.text()
+        money = self.ui.lineEdit_6.text()
+        j_time = self.ui.lineEdit_7.text()
+        left_num = self.ui.lineEdit_8.text()
+        topic = self.ui.lineEdit_9.text()
+        pass
+    # 修改密码
+    def change_pass(self):
+        ID = self.ui.lineEdit_19.text()
+        name = self.ui.lineEdit_20.text()
+        password = self.ui.label_21.text()
+        re_password = self.ui.lineEdit_22.text()
+        pass
+    # 修改借阅信息
+    def change_msg(self):
+        time = self.ui.lineEdit_23.text()
+        num = self.ui.lineEdit_24.text()
+        pass
+
 class StudentWindow(QMainWindow):
     def __init__(self, parent=None):
         super(QMainWindow, self).__init__(parent)
@@ -142,7 +175,10 @@ class StudentWindow(QMainWindow):
             pass
         elif self.find_way == "ISBN":
             pass
-
+        elif self.find_way == "time":
+            pass
+        elif self.find_way == "au":
+            pass
         # 找到的图书像这样显示
         if is_find:
             item = self.ui.tableWidget.verticalHeaderItem(0)
@@ -153,6 +189,37 @@ class StudentWindow(QMainWindow):
             item.setText("111")
             item = self.ui.tableWidget.item(0, 2)
             item.setText("是")
+
+    def borrow(self):
+        name = self.ui.lineEdit.text()
+        self.ui.pushButton.setText("确认借阅")
+        self.ui.pushButton.clicked.connect(self.start_borrow)
+
+    def start_borrow(self):
+        pass
+
+    def back(self):
+        name = self.ui.lineEdit.text()
+        self.ui.pushButton.setText("确认归还")
+        self.ui.pushButton.clicked.connect(self.start_back)
+
+    def start_back(self):
+        pass
+
+    def longer(self):
+        self.ui.label_3.show()
+        self.ui.lineEdit_2.show()
+        name = self.ui.lineEdit.text()
+        time = self.ui.lineEdit_2.text()
+        self.ui.pushButton.setText("确认续借")
+        self.ui.pushButton.clicked.connect(self.start_longer)
+
+    def start_longer(self):
+        pass
+
+    def history(self):
+        # 类似查找的展示方法
+        pass
 
     def find_name(self):
         self.ui.label_2.setText("请输入要找的图书名称：")
@@ -165,6 +232,14 @@ class StudentWindow(QMainWindow):
     def find_ISBN(self):
         self.ui.label_2.setText("请输入要找的图书ISBN：")
         self.find_way = "ISBN"
+
+    def find_time(self):
+        self.ui.label_2.setText("请输入要找图书的出版时间：")
+        self.find_way = "time"
+
+    def find_au(self):
+        self.ui.label_2.setText("请输入要找图书的作者：")
+        self.find_way = "au"
 
 
 class MainDialog(QDialog):
@@ -239,7 +314,8 @@ class MainDialog(QDialog):
         is_right = self.admin_can_login(usrname, password)
 
         if is_right:
-            pass
+            admin_Dlg.show()
+            login.hide()
         else:
             QMessageBox.warning(None, "登录失败", "用户名或密码输入错误！", QMessageBox.Ok)
             # 清空文本框内容
@@ -259,6 +335,7 @@ if __name__ == '__main__':
     adm_register_Dlg = registerDialog("adm")
 
     student_Win = StudentWindow()
+    admin_Dlg = adminDialog()
 
     login.show()
 
