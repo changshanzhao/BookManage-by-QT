@@ -8,6 +8,7 @@ import register
 import student
 
 from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox, QLineEdit, QMainWindow
+from PyQt5 import QtWidgets
 import pandas as pd
 
 
@@ -183,12 +184,14 @@ class StudentWindow(QMainWindow):
         if is_find:
             item = self.ui.tableWidget.verticalHeaderItem(0)
             item.setText(text)
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 0, item)
             item = self.ui.tableWidget.item(0, 0)
             item.setText("计算机")
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 1, item)
             item = self.ui.tableWidget.item(0, 1)
             item.setText("111")
-            item = self.ui.tableWidget.item(0, 2)
-            item.setText("是")
 
     def borrow(self):
         name = self.ui.lineEdit.text()
