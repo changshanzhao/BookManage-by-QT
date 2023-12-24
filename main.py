@@ -11,6 +11,8 @@ from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox, QLineEdit, QMain
 from PyQt5 import QtWidgets
 import pandas as pd
 
+import datetime
+
 
 
 class registerDialog(QDialog):
@@ -161,88 +163,258 @@ class adminDialog(QDialog):
         pass
 
 class StudentWindow(QMainWindow):
+    
+    now_pattern = 'find'
+    
     def __init__(self, parent=None):
         super(QMainWindow, self).__init__(parent)
         self.find_way = "name"
         self.ui = student.Ui_student()
         self.ui.setupUi(self)
+        
+
+    
+    #查找书函数
+    def find_book(self, search_index, book_name=None, book_type = None, isbn=None, writer=None, pubdate=None):
+        
+        df = pd.read_excel('books.xlsx')  
+        if book_name:
+            row_index = df[df['书名'] == search_index].index.tolist()    
+        elif book_type:
+            row_index = df[df['类型'] == search_index].index.tolist() 
+        elif isbn:
+            row_index = df[df['ISBN号'] == search_index].index.tolist()
+        elif writer:
+            row_index = df[df['作者'] == search_index].index.tolist()
+        elif pubdate:
+            row_index = df[df['出版时间'] == search_index].index.tolist()
+            
+            
+        if len(row_index)>0:  
+            return row_index
+        else:  
+            return False
+        
+        
     def start_find(self):
+        df = pd.read_excel('books.xlsx')
         text = self.ui.lineEdit.text()
+        global book_row
+        
         is_find = True
         if self.find_way == "name":
-            # 按名称查找,pass占位，填完功能就把他删了
-            pass
+            row_index = self.find_book(text,book_name = True)
         elif self.find_way == "type":
-            pass
+            row_index = self.find_book(text,book_type = True)
         elif self.find_way == "ISBN":
-            pass
+            row_index = self.find_book(text,isbn = True)
         elif self.find_way == "time":
-            pass
+            row_index = self.find_book(text,pubdate = True)
         elif self.find_way == "au":
-            pass
+            row_index = self.find_book(text,writer = True)
+            
+        if row_index == False:
+            is_find = False
+            
         # 找到的图书像这样显示
+        #若没找到图书，book_row = -1
+        
         if is_find:
+            book_row = row_index[0]
             item = self.ui.tableWidget.verticalHeaderItem(0)
-            item.setText(text)
+            item.setText(df.loc[row_index[0],'书名'])
             item = QtWidgets.QTableWidgetItem()
             self.ui.tableWidget.setItem(0, 0, item)
             item = self.ui.tableWidget.item(0, 0)
-            item.setText("计算机")
+            item.setText(str(df.loc[row_index[0],'ISBN号']))
             item = QtWidgets.QTableWidgetItem()
             self.ui.tableWidget.setItem(0, 1, item)
             item = self.ui.tableWidget.item(0, 1)
-            item.setText("111")
+            item.setText(df.loc[row_index[0],'作者'])
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 2, item)
+            item = self.ui.tableWidget.item(0, 2)
+            item.setText(str(df.loc[row_index[0],'出版时间']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 3, item)
+            item = self.ui.tableWidget.item(0, 3)
+            item.setText(str(df.loc[row_index[0],'数量']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 4, item)
+            item = self.ui.tableWidget.item(0, 4)
+            item.setText(str(df.loc[row_index[0],'标价']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 5, item)
+            item = self.ui.tableWidget.item(0, 5)
+            item.setText(str(df.loc[row_index[0],'可借阅时间']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 6, item)
+            item = self.ui.tableWidget.item(0, 6)
+            item.setText(str(df.loc[row_index[0],'可借阅数量']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 7, item)
+            item = self.ui.tableWidget.item(0, 7)
+            item.setText(df.loc[row_index[0],'库存书架号'])
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(0, 8, item)
+            item = self.ui.tableWidget.item(0, 8)
+            item.setText(df.loc[row_index[0],'类型'])
+        else:
+            QMessageBox.warning(None, "查找失败", "未找到相关图书", QMessageBox.Ok)
+            book_row = -1
 
+
+    #借书
     def borrow(self):
         name = self.ui.lineEdit.text()
         self.ui.pushButton.setText("确认借阅")
+        
+        #按钮的功能转换
+        if self.now_pattern == 'find':
+            self.ui.pushButton.clicked.disconnect(self.start_find)
+        elif self.now_pattern == 'borrow':
+            self.ui.pushButton.clicked.disconnect(self.start_borrow)
+        elif self.now_pattern == 'back':
+            self.ui.pushButton.clicked.disconnect(self.start_back)
+        elif self.now_pattern == 'longer':
+            self.ui.pushButton.clicked.disconnect(self.start_longer)
+            
         self.ui.pushButton.clicked.connect(self.start_borrow)
+        now_pattern = 'borrow'
+        
 
-    def start_borrow(self):
-        pass
+    def start_borrow(self, book_isbn):
+        student = pd.read_excel('User_Message.xlsx')
+        books = pd.read_excel('books.xlsx')
+        date_after_30_days = datetime.date.today() + datetime.timedelta(days=30)
+        global book_row 
+        
+        
+        if int(books.loc[book_row,'可借阅数量']) < 1 and book_row != -1:
+            QMessageBox.warning(None, "借阅失败", "该图书可借阅数量不足", QMessageBox.Ok)
+        elif int(student.loc[student['账号'] == int(student_id),'可借阅数量']) < 1 and book_row != -1:
+            QMessageBox.warning(None, "借阅失败", "您的借阅数量已到达上限", QMessageBox.Ok)
+        elif book_row != -1:
+            QMessageBox.warning(None, "借阅成功", "借阅成功！请于" + date_after_30_days.strftime("%Y-%m-%d") + "归还。", QMessageBox.Ok)
+            books.loc[book_row,'可借阅数量'] -= 1
+            books.to_excel('books.xlsx',index = False)
+            student.loc[student['账号'] == int(student_id),'可借阅数量'] = int(student.loc[student['账号'] == int(student_id),'可借阅数量']) - 1
+            student.loc[student['账号'] == int(student_id),'借阅列表'] = student.loc[student['账号'] == int(student_id),'借阅列表'].astype('str') + ' ' + str(books.loc[book_row,'ISBN号'])
+            student.loc[student['账号'] == int(student_id),'还书时间'] = student.loc[student['账号'] == int(student_id),'还书时间'].astype('str') + ' ' + str(date_after_30_days.strftime("%Y-%m-%d"))
+            student.to_excel('User_Message.xlsx',index=False)
+        
 
+
+    #还书
     def back(self):
         name = self.ui.lineEdit.text()
         self.ui.pushButton.setText("确认归还")
+        self.ui.pushButton.clicked.disconnect(None)
         self.ui.pushButton.clicked.connect(self.start_back)
 
     def start_back(self):
         pass
 
+    #续借
     def longer(self):
         self.ui.label_3.show()
         self.ui.lineEdit_2.show()
         name = self.ui.lineEdit.text()
         time = self.ui.lineEdit_2.text()
         self.ui.pushButton.setText("确认续借")
+        self.ui.pushButton.clicked.disconnect(None)
         self.ui.pushButton.clicked.connect(self.start_longer)
 
     def start_longer(self):
         pass
 
+    #查借阅记录
     def history(self):
+        student = pd.read_excel('User_Message.xlsx')
+        books = pd.read_excel('books.xlsx')
         # 类似查找的展示方法
-        pass
+        i = 0
+        book_list = student.loc[student['账号'] == student_id,'借阅列表'].split(' ')
+        print(book_list)
+        for book_isbn in book_list:
+            row_index = self.find_book(book_isbn, book_isbn = True)
+            item = self.ui.tableWidget.verticalHeaderItem(0)
+            item.setText(books.loc[row_index[0],'书名'])
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 0, item)
+            item = self.ui.tableWidget.item(0, 0)
+            item.setText(str(books.loc[row_index[0],'ISBN号']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 1, item)
+            item = self.ui.tableWidget.item(0, 1)
+            item.setText(books.loc[row_index[0],'作者'])
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 2, item)
+            item = self.ui.tableWidget.item(0, 2)
+            item.setText(str(books.loc[row_index[0],'出版时间']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 3, item)
+            item = self.ui.tableWidget.item(0, 3)
+            item.setText(str(books.loc[row_index[0],'数量']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 4, item)
+            item = self.ui.tableWidget.item(0, 4)
+            item.setText(str(books.loc[row_index[0],'标价']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 5, item)
+            item = self.ui.tableWidget.item(0, 5)
+            item.setText(str(books.loc[row_index[0],'可借阅时间']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 6, item)
+            item = self.ui.tableWidget.item(0, 6)
+            item.setText(str(books.loc[row_index[0],'可借阅数量']))
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 7, item)
+            item = self.ui.tableWidget.item(0, 7)
+            item.setText(books.loc[row_index[0],'库存书架号'])
+            item = QtWidgets.QTableWidgetItem()
+            self.ui.tableWidget.setItem(i, 8, item)
+            item = self.ui.tableWidget.item(0, 8)
+            item.setText(books.loc[row_index[0],'类型'])
+            i += 1
+
+
+
 
     def find_name(self):
         self.ui.label_2.setText("请输入要找的图书名称：")
         self.find_way = "name"
+        self.ui.pushButton.setText("开始查找")
+        self.ui.pushButton.clicked.disconnect(None)
+        self.ui.pushButton.clicked.connect(self.start_find)
 
     def find_type(self):
         self.ui.label_2.setText("请输入要找的图书类型：")
         self.find_way = "type"
+        self.ui.pushButton.setText("开始查找")
+        self.ui.pushButton.clicked.disconnect(None)
+        self.ui.pushButton.clicked.connect(self.start_find)
 
     def find_ISBN(self):
         self.ui.label_2.setText("请输入要找的图书ISBN：")
         self.find_way = "ISBN"
+        self.ui.pushButton.setText("开始查找")
+        self.ui.pushButton.clicked.disconnect(None)
+        self.ui.pushButton.clicked.connect(self.start_find)
 
     def find_time(self):
         self.ui.label_2.setText("请输入要找图书的出版时间：")
         self.find_way = "time"
+        self.ui.pushButton.setText("开始查找")
+        self.ui.pushButton.clicked.disconnect(None)
+        self.ui.pushButton.clicked.connect(self.start_find)
 
     def find_au(self):
         self.ui.label_2.setText("请输入要找图书的作者：")
         self.find_way = "au"
+        self.ui.pushButton.setText("开始查找")
+        self.ui.pushButton.clicked.disconnect(None)
+        self.ui.pushButton.clicked.connect(self.start_find)
 
 
 class MainDialog(QDialog):
@@ -255,7 +427,7 @@ class MainDialog(QDialog):
     # 学生登录判断，可登录返回True，否则返回False
     def student_can_login(self, username, password):
         is_right = False
-        df = pd.read_excel('User_Message.xlsx', sheet_name='Student')
+        df = pd.read_excel('User_Message.xlsx')
         # 遍历账号密码
         for index, row in df.iterrows():
             username_al = str(row['账号'])
@@ -297,6 +469,8 @@ class MainDialog(QDialog):
         usrname = self.ui.username_1.text()
         password = self.ui.password_1.text()
         is_right = self.student_can_login(usrname, password)
+        global student_id
+        student_id = usrname
         if is_right:
             student_Win.show()
             login.hide()
@@ -313,9 +487,8 @@ class MainDialog(QDialog):
     def admin_login(self):
         usrname = self.ui.username_2.text()
         password = self.ui.password_2.text()
-
         is_right = self.admin_can_login(usrname, password)
-
+        
         if is_right:
             admin_Dlg.show()
             login.hide()
