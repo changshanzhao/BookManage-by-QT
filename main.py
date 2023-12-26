@@ -317,10 +317,7 @@ class StudentWindow(QMainWindow):
 
     #续借
     def longer(self):
-        self.ui.label_3.show()
-        self.ui.lineEdit_2.show()
         name = self.ui.lineEdit.text()
-        time = self.ui.lineEdit_2.text()
         self.ui.pushButton.setText("确认续借")
         self.ui.pushButton.clicked.disconnect(None)
         self.ui.pushButton.clicked.connect(self.start_longer)
