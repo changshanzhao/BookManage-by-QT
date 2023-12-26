@@ -171,6 +171,11 @@ class adminDialog(QDialog):
         num = self.ui.lineEdit_24.text()
         pass
 
+    def backbook(self):
+        ISBN = self.ui.lineEdit_27.text()
+        ID = self.ui.lineEdit_26.text()
+        pass
+
 class StudentWindow(QMainWindow):
     
     now_pattern = 'find'
