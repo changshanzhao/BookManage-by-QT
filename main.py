@@ -131,6 +131,15 @@ class registerDialog(QDialog):
                 adm_register_Dlg.hide()
                 login.show()
 
+    def closeEvent(self, event):
+        event.ignore()
+        if self.type == "stu":
+            stu_register_Dlg.hide()
+            login.show()
+        else:
+            adm_register_Dlg.hide()
+            login.show()
+
 class adminDialog(QDialog):
 
     def __init__(self, parent=None):
